@@ -33,7 +33,7 @@ class AnalysisRes:
         labels = [""] * len(self.acid_dict)
         for key in self.acid_dict:
             labels[self.acid_dict[key]] = key
-        ax.bar(x, self.tensor, tick_label=labels, color='g')
+        ax.bar(x, self.tensor, tick_label=labels, color='b')
         ax.set_xlabel("amino acids", fontdict={'size':17})
         ax.set_ylabel("frequency", fontdict={'size':17})
         ax.set_title("1D result representation", fontdict={'size':20})
@@ -126,8 +126,38 @@ class AnalysisRes:
         Z = Z + np.full((4, 5), z - edge / 2)
         return X, Y, Z
 
+    def __str__(self):
+        res_str = 'Analysis result:\nAlphabet: '
+        res_str += str(self.acid_dict) + '\nData:\n'
+        acids = [''] * len(self.acid_dict)
+        for key in self.acid_dict:
+            acids[self.acid_dict[key]] = key
+        if self.dim == 1:
+            res_str += '['
+            for i in range(len(self.tensor)):
+                res_str += (' ' if i != 0 else '') + '{0:.4f}'.format(self.tensor[i])
+            res_str += ']\n'
+        elif self.dim == 2:
+            for i in range(len(self.tensor)):
+                res_str += acids[i] + ': ['
+                for j in range(len(self.tensor)):
+                    res_str += (' ' if j != 0 else '') + '{0:.4f}'.format(self.tensor[i][j])
+                res_str += ']\n'
+        elif self.dim == 3:
+            for i in range(len(self.tensor)):
+                res_str += acids[i] + ':\n'
+                for j in range(len(self.tensor[i])):
+                    res_str += '    ' + acids[j] + '['
+                    for k in range(len(self.tensor)):
+                        res_str += (' ' if k != 0 else '') + '{0:.4f}'.format(self.tensor[i][j][k])
+                    res_str += ']\n'
+        else:
+            raise TypeError("data must be not more then 3-dimensional.")
+        return res_str
+
+
 def analyse(alignment, *args):
-    acids = IUPAC.protein.letters + "U"
+    acids = IUPAC.protein.letters + "UO"
     acid_dict = {acids[i]: i for i in range(len(acids))}
     nacid = len(acids)
     if len(args) == 1:
@@ -177,11 +207,16 @@ def analyse(alignment, *args):
 
 if __name__ == "__main__":
     fin = sys.argv[1]
+    param = tuple(map(int, sys.argv[2:]))
+    if len(param) < 1 or len(param) > 3:
+        print('Wrong parameters!')
+        exit(1)
     print("Input file: {0}".format(fin))
     sequence_record = SeqIO.parse(fin, 'fasta')
-    res = analyse(sequence_record, 204)
-    sequence_record = SeqIO.parse(fin, 'fasta')
-    for rec in sequence_record:
-        print(rec.seq)
+    res = analyse(sequence_record, *param)
+    # sequence_record = SeqIO.parse(fin, 'fasta')
+    # for rec in sequence_record:
+    #     print(rec.seq)
+    print(res)
     res.plot_heat()
     print("Done!")
