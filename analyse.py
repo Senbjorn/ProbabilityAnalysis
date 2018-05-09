@@ -37,7 +37,7 @@ class AnalysisRes:
 
     def _plot_heat2d(self):
         fig, ax = plt.subplots(figsize=(8, 6))
-        ax.imshow(self.tensor, vmin=0, vmax=1, cmap='Blues', origin=[0, len(self.acid_dict)])
+        ax.imshow(self.tensor, vmin=0, vmax=1, cmap='Blues', origin='lower')
         ax.set_xticks(np.arange(len(self.acid_dict)))
         ax.set_yticks(np.arange(len(self.acid_dict)))
         labels = [""] * len(self.acid_dict)
@@ -45,9 +45,13 @@ class AnalysisRes:
             labels[self.acid_dict[key]] = key
         ax.set_xticklabels(labels)
         ax.set_yticklabels(labels)
-        ax.set_xlabel("actual amino acids", fontdict={'size':17})
-        ax.set_ylabel("condition amino acids", fontdict={'size':17})
+        ax.set_xlabel("condition amino acids", fontdict={'size':17})
+        ax.set_ylabel("actual amino acids", fontdict={'size':17})
         ax.set_title("2D data representation", fontdict={'size':20})
+        for i in range(len(self.acid_dict)):
+            for j in range(len(self.acid_dict)):
+                text = ax.text(j, i, "{0:.2f}".format(self.tensor[i, j]),
+                               ha="center", va="center", color="y", fontdict={'size':6})
         plt.show()
 
     def _plot_heat3d(self):
@@ -72,10 +76,11 @@ def analyse(alignment, *args):
         total = np.zeros(nacid)
         matrix = np.zeros((nacid, nacid))
         for record in alignment:
-            if record.seq[pos1] in acid_dict and record.seq[pos2] in acid_dict:
-                ind1, ind2 = acid_dict[record.seq[pos1]], acid_dict[record.seq[pos2]]
+            if record.seq[pos2] in acid_dict:
+                ind2 = acid_dict[record.seq[pos2]]
                 total[ind2] += 1
-                matrix[ind1][ind2] += 1
+                if record.seq[pos1] in acid_dict:
+                    matrix[acid_dict[record.seq[pos1]]][ind2] += 1
         for i in range(nacid):
             for j in range(nacid):
                 if total[j] != 0:
@@ -86,10 +91,11 @@ def analyse(alignment, *args):
         total = np.zeros((nacid, nacid))
         tensor = np.zeros((nacid, nacid, nacid))
         for record in alignment:
-            if record.seq[pos1] in acid_dict and record.seq[pos2] in acid_dict and record.seq[pos3] in acid_dict:
-                ind1, ind2, ind3 = acid_dict[record.seq[pos1]], acid_dict[record.seq[pos2]], acid_dict[record.seq[pos3]]
+            if record.seq[pos2] in acid_dict and record.seq[pos3] in acid_dict:
+                ind2, ind3 = acid_dict[record.seq[pos2]], acid_dict[record.seq[pos3]]
                 total[ind2][ind3] += 1
-                tensor[ind1][ind2][ind3] += 1
+                if record.seq[pos1] in acid_dict:
+                    tensor[acid_dict[record.seq[pos1]]][ind2][ind3] += 1
         for i in range(nacid):
             for j in range(nacid):
                 for k in range(nacid):
@@ -104,8 +110,9 @@ if __name__ == "__main__":
     fin = sys.argv[1]
     print("Input file: {0}".format(fin))
     sequence_record = SeqIO.parse(fin, 'fasta')
-    # for rec in sequence_record:
-    #     print(rec.seq)
     res = analyse(sequence_record, 160, 170)
+    sequence_record = SeqIO.parse(fin, 'fasta')
+    for rec in sequence_record:
+        print(rec.seq)
     res.plot_heat()
     print("Done!")
