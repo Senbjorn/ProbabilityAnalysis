@@ -179,7 +179,7 @@ if __name__ == "__main__":
     fin = sys.argv[1]
     print("Input file: {0}".format(fin))
     sequence_record = SeqIO.parse(fin, 'fasta')
-    res = analyse(sequence_record, 160, 170, 180)
+    res = analyse(sequence_record, 204)
     sequence_record = SeqIO.parse(fin, 'fasta')
     for rec in sequence_record:
         print(rec.seq)
