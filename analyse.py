@@ -1,9 +1,12 @@
 import sys
 import numpy as np
+import matplotlib
+import types
 from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
 
 class AnalysisRes:
     def __init__(self, tensor, acid_dict):
@@ -37,7 +40,7 @@ class AnalysisRes:
 
     def _plot_heat2d(self):
         fig, ax = plt.subplots(figsize=(8, 6))
-        ax.imshow(self.tensor, vmin=0, vmax=1, cmap='Blues', origin='lower')
+        im = ax.imshow(self.tensor, vmin=0, vmax=1, cmap='Blues', origin='lower', aspect='equal')
         ax.set_xticks(np.arange(len(self.acid_dict)))
         ax.set_yticks(np.arange(len(self.acid_dict)))
         labels = [""] * len(self.acid_dict)
@@ -48,14 +51,21 @@ class AnalysisRes:
         ax.set_xlabel("condition amino acids", fontdict={'size':17})
         ax.set_ylabel("actual amino acids", fontdict={'size':17})
         ax.set_title("2D data representation", fontdict={'size':20})
-        for i in range(len(self.acid_dict)):
-            for j in range(len(self.acid_dict)):
-                text = ax.text(j, i, "{0:.2f}".format(self.tensor[i, j]),
-                               ha="center", va="center", color="y", fontdict={'size':6})
+        ax.set_xticks(np.arange(-.5, len(self.acid_dict)), minor=True);
+        ax.set_yticks(np.arange(-.5, len(self.acid_dict)), minor=True);
+        ax.grid(which='minor', color='gray', linestyle='-', linewidth=1)
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        # for i in range(len(self.acid_dict)):
+        #     for j in range(len(self.acid_dict)):
+        #         text = ax.text(j, i, "{0:.2f}".format(self.tensor[i, j]),
+        #                        ha="center", va="center", color="y", fontdict={'size':6})
+        fig.colorbar(im, shrink=0.5, aspect=5)
         plt.show()
 
     def _plot_heat3d(self):
         pass
+
 
 def analyse(alignment, *args):
     acids = IUPAC.protein.letters + "U"
